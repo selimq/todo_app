@@ -2,5 +2,6 @@
 
 abstract class  LocaleKeys {
   static const welcome = 'welcome';
+  static const not_found = 'not_found';
 
 }
