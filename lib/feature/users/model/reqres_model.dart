@@ -1,8 +1,9 @@
 import 'package:json_annotation/json_annotation.dart';
+import '../../../core/base/model/base_model.dart';
 part 'reqres_model.g.dart';
 
 @JsonSerializable()
-class ReqresModel {
+class ReqresModel extends IBaseModel {
   int? page;
   int? perPage;
   int? total;
@@ -10,13 +11,17 @@ class ReqresModel {
   List<User?>? data;
   ReqresModel(
       {this.page, this.perPage, this.total, this.totalPages, this.data});
-  factory ReqresModel.fromJson(Map<String, dynamic> json) =>
-      _$ReqresModelFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$ReqresModelToJson(this);
+
+  @override
+  fromJson(Map<String, dynamic> json) {
+    return _$ReqresModelFromJson(json);
+  }
 }
 
 @JsonSerializable()
-class User {
+class User extends IBaseModel {
   int? id;
   String? email;
   String? firstName;
@@ -25,5 +30,9 @@ class User {
 
   User({this.id, this.email, this.firstName, this.lastName, this.avatar});
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  @override
   Map<String, dynamic> toJson() => _$UserToJson(this);
+
+  @override
+  fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 }

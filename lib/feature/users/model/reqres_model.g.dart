@@ -28,8 +28,8 @@ Map<String, dynamic> _$ReqresModelToJson(ReqresModel instance) =>
 User _$UserFromJson(Map<String, dynamic> json) => User(
       id: json['id'] as int?,
       email: json['email'] as String?,
-      firstName: json['firstName'] as String?,
-      lastName: json['lastName'] as String?,
+      firstName: json['first_name'] as String?,
+      lastName: json['last_name'] as String?,
       avatar: json['avatar'] as String?,
     );
 

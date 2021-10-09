@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app/core/components/text/locale_text.dart';
+import '../text/locale_text.dart';
 import '../../../generated/locale_keys.g.dart';
 
 class NotFoundNavigationWidget extends StatelessWidget {

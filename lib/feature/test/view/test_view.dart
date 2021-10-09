@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app/core/components/text/locale_text.dart';
+import '../../../core/components/text/locale_text.dart';
 import '../../../core/base/state/base_state.dart';
 import '../../../generated/locale_keys.g.dart';
 
@@ -14,9 +14,17 @@ class _TestViewState extends BaseState<TestView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const LocaleText(value: LocaleKeys.welcome),
+      appBar: AppBar(
+        title: const LocaleText(value: LocaleKeys.welcome),
+        leading: IconButton(
+          icon: const Icon(Icons.read_more),
+          onPressed: () {},
         ),
-        body: Container());
+      ),
+      body: ElevatedButton(
+        child: const Text("test"),
+        onPressed: () async {},
+      ),
+    );
   }
 }
