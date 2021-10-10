@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/components/text/locale_text.dart';
 import '../../../core/base/state/base_state.dart';
 import '../../../generated/locale_keys.g.dart';
+import '../../../core/extension/widget_extension.dart';
 
 class TestView extends StatefulWidget {
   const TestView({Key? key}) : super(key: key);
@@ -21,9 +22,19 @@ class _TestViewState extends BaseState<TestView> {
           onPressed: () {},
         ),
       ),
-      body: ElevatedButton(
-        child: const Text("test"),
-        onPressed: () async {},
+      body: Column(
+        children: [
+          Container(
+            padding: context.paddindHorizontal18,
+            child: ElevatedButton(
+              child: const Text(
+                "test",
+              ),
+              onPressed: () async {},
+            ),
+          ),
+          context.uiSpacer(horizontal: 3, vertical: 5),
+        ],
       ),
     );
   }
