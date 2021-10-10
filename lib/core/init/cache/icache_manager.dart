@@ -1,4 +1,5 @@
 import 'package:get_storage/get_storage.dart';
+
 import '../../base/model/base_model.dart';
 
 abstract class ICacheManager {
