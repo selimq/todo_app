@@ -7,14 +7,15 @@ part of 'reqres_model.dart';
 // **************************************************************************
 
 ReqresModel _$ReqresModelFromJson(Map<String, dynamic> json) => ReqresModel(
-    page: json['page'] as int?,
-    perPage: json['perPage'] as int?,
-    total: json['total'] as int?,
-    totalPages: json['totalPages'] as int?,
-    data: (json['data'] as List<dynamic>?)
-        ?.map(
-            (e) => e == null ? null : User.fromJson(e as Map<String, dynamic>))
-        .toList());
+      page: json['page'] as int?,
+      perPage: json['perPage'] as int?,
+      total: json['total'] as int?,
+      totalPages: json['totalPages'] as int?,
+      data: (json['data'] as List<dynamic>?)
+          ?.map((e) =>
+              e == null ? null : User.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
 
 Map<String, dynamic> _$ReqresModelToJson(ReqresModel instance) =>
     <String, dynamic>{
@@ -28,8 +29,8 @@ Map<String, dynamic> _$ReqresModelToJson(ReqresModel instance) =>
 User _$UserFromJson(Map<String, dynamic> json) => User(
       id: json['id'] as int?,
       email: json['email'] as String?,
-      firstName: json['first_name'] as String?,
-      lastName: json['last_name'] as String?,
+      firstName: json['firstName'] as String?,
+      lastName: json['lastName'] as String?,
       avatar: json['avatar'] as String?,
     );
 

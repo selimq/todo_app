@@ -1,4 +1,5 @@
 {
-    "welcome": "Hoş geldin",
-    "not_found": " Sayfa Bulunamadı"
+    "welcome":"Hoş geldin",
+    "not_found":"Sayfa Bulunamadı",
+    "alert_delete":"Silmek istediğinize emin misiniz?"
 }

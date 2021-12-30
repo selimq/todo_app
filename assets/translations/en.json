@@ -1,4 +1,5 @@
 {
     "welcome": "Hello Welcome to My App",
-    "not_found": "Not Found Page"
+    "not_found": "Not Found Page",
+    "alert_delete":"Are you sure you want to delete?"
 }

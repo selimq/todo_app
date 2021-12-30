@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/feature/calendar/view/calendar.dart';
 import '../../../feature/test/view/abc_view.dart';
 import '../../components/card/not_found_navigation_widget.dart';
 import '../../constants/navigation/navigation_constants.dart';
@@ -15,6 +16,8 @@ class NavigationRoute {
         return normalNavigate(const TestView());
       case NavigationConstants.ABC_VIEW:
         return normalNavigate(const ABC());
+      case NavigationConstants.CALENDAR:
+        return normalNavigate(const Calendar());
       default:
         return MaterialPageRoute(
           builder: (context) => const NotFoundNavigationWidget(),
