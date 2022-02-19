@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app/app_constants.dart';
-import '../../../core/constants/navigation/navigation_constants.dart';
-import '../../../core/init/navigation/navigation_route.dart';
-import '../../../core/init/navigation/navigation_service.dart';
 import '../../../core/components/text/locale_text.dart';
 import '../../../core/base/state/base_state.dart';
 import '../../../generated/locale_keys.g.dart';
