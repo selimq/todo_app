@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:todo_app/feature/test/model/note.dart';
+import '../model/note.dart';
 import '../../../core/constants/app/app_constants.dart';
 import '../../../core/constants/navigation/navigation_constants.dart';
 import '../../../core/init/navigation/navigation_route.dart';

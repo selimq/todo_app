@@ -1,18 +1,13 @@
 import 'package:another_flushbar/flushbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:todo_app/core/components/text/locale_text.dart';
-import 'package:todo_app/feature/calendar/view/notification_service.dart';
+import 'notification_service.dart';
 import 'dart:collection';
 import '../../../core/extension/context_extension.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 
-import 'package:todo_app/feature/test/model/note.dart';
-import 'package:todo_app/feature/test/view/test_view.dart';
-import 'package:todo_app/generated/locale_keys.g.dart';
+import '../../test/model/note.dart';
 
 class Calendar extends StatefulWidget {
   const Calendar({Key? key}) : super(key: key);
@@ -24,7 +19,7 @@ class Calendar extends StatefulWidget {
 class _CalendarState extends State<Calendar> {
   @override
   Widget build(BuildContext context) {
-    return TableEventsExample();
+    return const TableEventsExample();
   }
 }
 
@@ -35,25 +30,30 @@ extension DateOnlyCompare on DateTime {
 }
 
 class TableEventsExample extends StatefulWidget {
+  const TableEventsExample({Key? key}) : super(key: key);
+
   @override
   _TableEventsExampleState createState() => _TableEventsExampleState();
 }
 
 class _TableEventsExampleState extends State<TableEventsExample> {
 //  List<Note> _selectedNotes = [];
+  late final ValueNotifier<List<Note>> _selectedEvents;
+  bool isLoading = true;
   var checked = false;
-
-  List<Note> _allNotes = [];
+  List<Map<String, List<Note>>> listNotes = [];
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  CollectionReference notes = FirebaseFirestore.instance.collection('notes');
+  CollectionReference notes = FirebaseFirestore.instance.collection('notesAll');
   TextEditingController title = TextEditingController();
   TextEditingController saat = TextEditingController();
   @override
   void initState() {
     _selectedDay = _focusedDay;
     super.initState();
-    //   getAllNotes();
+
+    // _selectedEvents = ValueNotifier(_getEventsForDay(_focusedDay));
+    getAllNotes();
     // getAllNotes();
 
     // _selectedNotes = ValueNotifier(_getNoteForDay(_selectedDay!));
@@ -69,19 +69,29 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     hashCode: getHashCode,
   );
 
-/*   // ignore: prefer_for_elements_to_map_fromiterable, unused_field
-  final _kEventSource = Map.fromIterable(List.generate(50, (index) => index),
-      key: (item) => DateTime.utc(kFirstDay.year, kFirstDay.month, item * 5),
-      value: (item) => List.generate(
-          item % 4 + 1, (index) => Note('Event $item | ${index + 1}'))); */
-
   List<Note> _getEventsForDay(DateTime day) {
     // Implementation example
-    return kEvents[day] ?? [];
+    //// print(kEvents[day]);
+    FirebaseFirestore.instance
+        .collection("notesAll")
+        .doc(day.toIso8601String().toString().substring(0, 10))
+        .set({"date": day});
+    return listNotes
+            .where((element) => element
+                .containsKey(day.toIso8601String().toString().substring(0, 10)))
+            .first[day.toIso8601String().toString().substring(0, 10)] ??
+        [];
+  }
+
+  List<Note> getNotesFromDayInListNotes(DateTime day) {
+    return listNotes
+            .where((element) => element
+                .containsKey(day.toIso8601String().toString().substring(0, 10)))
+            .first[day.toIso8601String().toString().substring(0, 10)] ??
+        [];
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    //print(DateTime(selectedDay.year, selectedDay.month, selectedDay.day, 23));
     selectedDay =
         DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
     //print(_selectedNotes.first != null ? _selectedNotes.first.time : '');
@@ -90,9 +100,10 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         _selectedDay = selectedDay;
         _focusedDay = focusedDay;
       });
-
-      // _selectedNotes.value = _getNoteForDay(selectedDay);
-
+      FirebaseFirestore.instance
+          .collection("notesAll")
+          .doc(selectedDay.toIso8601String().toString().substring(0, 10))
+          .set({"date": selectedDay});
     }
   }
 
@@ -103,82 +114,86 @@ class _TableEventsExampleState extends State<TableEventsExample> {
         title: const Text('<3'),
         backgroundColor: Colors.deepPurple,
       ),
-      body: Column(
-        children: [
-          TableCalendar<Note>(
-            headerStyle: const HeaderStyle(
-                decoration: BoxDecoration(color: Colors.pink),
-                formatButtonVisible: false,
-                titleCentered: true),
-            firstDay: kFirstDay,
-            eventLoader: _getEventsForDay,
-            lastDay: kLastDay,
-            focusedDay: _focusedDay,
-            calendarBuilders: CalendarBuilders(
-              defaultBuilder: (context, day, focusedDay) {
-                (context, date, events) => Container(
-                    margin: const EdgeInsets.all(5.0),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        borderRadius: BorderRadius.circular(8.0)),
-                    child: Text(
-                      date.day.toString(),
-                      style: const TextStyle(color: Colors.white),
-                    ));
+      body: isLoading
+          ? Center(
+              child: const CircularProgressIndicator(),
+            )
+          : Column(
+              children: [
+                calendar(),
+                const SizedBox(height: 8.0),
+                const Divider(),
+                bottomNotes()
+              ],
+            ),
+      floatingActionButton: addButton(context),
+    );
+  }
+
+  StreamBuilder<QuerySnapshot<Object?>> bottomNotes() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: notes
+          .doc(_selectedDay!.toIso8601String().toString().substring(0, 10))
+          .collection('notes')
+          .where('time',
+              isLessThan: DateTime(_selectedDay!.year, _selectedDay!.month,
+                  _selectedDay!.day, 23, 59),
+              isGreaterThan: DateTime(_selectedDay!.year, _selectedDay!.month,
+                  _selectedDay!.day, 1))
+          .orderBy("time")
+          .snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return const Text("Something went wrong");
+        }
+
+        if (snapshot.hasData && snapshot.data == null) {
+          return const Text("Veri yok");
+        }
+
+        if (snapshot.connectionState == ConnectionState.active) {
+          return Expanded(
+            child: ListView.builder(
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                return tileNote(snapshot, index, context, notes);
               },
             ),
-            onCalendarCreated: (pageController) {
-              getAllNotes();
-            },
-            calendarStyle: CalendarStyle(
-                canMarkersOverflow: true,
-                isTodayHighlighted: true,
-                markerSize: 5),
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            startingDayOfWeek: StartingDayOfWeek.monday,
-            onDaySelected: _onDaySelected,
-            onPageChanged: (focusedDay) {
-              _focusedDay = focusedDay;
-            },
-          ),
-          const SizedBox(height: 8.0),
-          const Divider(),
-          StreamBuilder<QuerySnapshot>(
-            stream: notes
-                .where('time',
-                    isLessThan: DateTime(_selectedDay!.year,
-                        _selectedDay!.month, _selectedDay!.day, 23),
-                    isGreaterThan: DateTime(_selectedDay!.year,
-                        _selectedDay!.month, _selectedDay!.day, 1))
-                .orderBy("time")
-                .snapshots(),
-            builder:
-                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-              if (snapshot.hasError) {
-                return const Text("Something went wrong");
-              }
+          );
+        }
+        return const Text("");
+      },
+    );
+  }
 
-              if (snapshot.hasData && snapshot.data == null) {
-                return const Text("Veri yok");
-              }
-
-              if (snapshot.connectionState == ConnectionState.active) {
-                return Expanded(
-                  child: ListView.builder(
-                    itemCount: snapshot.data!.docs.length,
-                    itemBuilder: (context, index) {
-                      return tileNote(snapshot, index, context, notes);
-                    },
-                  ),
-                );
-              }
-              return const Text("");
-            },
-          )
-        ],
+  TableCalendar<Note> calendar() {
+    return TableCalendar<Note>(
+      headerStyle: const HeaderStyle(
+          decoration: BoxDecoration(color: Colors.pink),
+          formatButtonVisible: false,
+          titleCentered: true),
+      firstDay: kFirstDay,
+      lastDay: kLastDay,
+      startingDayOfWeek: StartingDayOfWeek.monday,
+      focusedDay: _focusedDay,
+      onDaySelected: _onDaySelected,
+      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+      onPageChanged: (focusedDay) {
+        _focusedDay = focusedDay;
+      },
+      calendarStyle: const CalendarStyle(
+        canMarkersOverflow: true,
+        isTodayHighlighted: true,
+        markerSize: 7,
+        markerDecoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.all(Radius.circular(15)),
+        ),
       ),
-      floatingActionButton: addButton(context),
+      eventLoader: _getEventsForDay,
+      onCalendarCreated: (pageController) {
+        //  getAllNotes();
+      },
     );
   }
 
@@ -210,7 +225,12 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                                     int.parse(saat.text[0] + saat.text[1]),
                                     int.parse(saat.text[3] + saat.text[4]));
                                 FirebaseFirestore.instance
-                                    .collection('notes')
+                                    .collection('notesAll')
+                                    .doc(_selectedDay
+                                        ?.toIso8601String()
+                                        .toString()
+                                        .substring(0, 10))
+                                    .collection("notes")
                                     .add({
                                   "title": title.text,
                                   "time": newt,
@@ -226,7 +246,11 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                                     }
                                   });
                                 });
-                                getAllNotes();
+
+                                getNotesFromDayInListNotes(_selectedDay!)
+                                    .add(Note());
+
+                                //  getAllNotes();
                                 Navigator.of(context).pop();
                               } else {
                                 Flushbar(
@@ -342,6 +366,11 @@ class _TableEventsExampleState extends State<TableEventsExample> {
                                 int.parse(saat.text[3] + saat.text[4]),
                               );
                               FirebaseFirestore.instance
+                                  .collection('notesAll')
+                                  .doc(_selectedDay!
+                                      .toIso8601String()
+                                      .toString()
+                                      .substring(0, 10))
                                   .collection('notes')
                                   .doc(id)
                                   .update({
@@ -415,8 +444,16 @@ class _TableEventsExampleState extends State<TableEventsExample> {
               actions: [
                 TextButton(
                     onPressed: () {
-                      query.doc(snapshot.data!.docs[index].id).delete();
-
+                      query
+                          .doc(_selectedDay!
+                              .toIso8601String()
+                              .toString()
+                              .substring(0, 10))
+                          .collection('notes')
+                          .doc(snapshot.data!.docs[index].id)
+                          .delete();
+                      getNotesFromDayInListNotes(_selectedDay!).removeAt(0);
+                      setState(() {});
                       Navigator.of(context).pop();
                     },
                     child: const Text("Evet")),
@@ -433,32 +470,49 @@ class _TableEventsExampleState extends State<TableEventsExample> {
     );
   }
 
-  getAllNotes() {
+  Future<void> getAllNotes() async {
     kEvents = LinkedHashMap<DateTime, List<Note>>(
       equals: isSameDay,
       hashCode: getHashCode,
     );
-    FirebaseFirestore.instance
-        .collection("notes")
-        .where('isFinished', isEqualTo: false)
-        .get()
-        .then((value) {
-      value.docs.map((e) {
-        var date = e.data()['time'].toDate();
-        var today = DateTime(date.year, date.month, date.day);
-        kEvents.addAll({
-          today: [
-            ..._getEventsForDay(today),
-            Note(time: e.data()['time'].toDate())
-          ]
+    FirebaseFirestore.instance.collection("notesAll").get().then((value) async {
+      //  print(value.docs);
+
+      for (var e in value.docs) {
+        FirebaseFirestore.instance
+            .collection("notesAll")
+            .doc(e.id)
+            .collection("notes")
+            .get()
+            .then((value) {
+          List<Note> notes = [];
+          value.docs.forEach((element) {
+            notes.add(Note(
+                time: element.data()['time'].toDate(),
+                isFinished: element.data()['finished'],
+                title: element.data()['title']));
+          });
+          print("adding..");
+          listNotes.add({
+            (e.data()['date']?.toDate() as DateTime)
+                .toIso8601String()
+                .toString()
+                .substring(0, 10): notes
+          });
+          //listNotes.add({e.data()['date']: value});
+          setState(() {});
         });
-      }).toList();
+      }
+      await Future.delayed(Duration(milliseconds: 500));
+      setState(() {
+        isLoading = false;
+      });
     });
   }
 }
 
 int getHashCode(DateTime key) {
-  return key.day * 1000000 + key.month * 10000 + key.year;
+  return key.day * 19023 + key.month * 129100 + key.year;
 }
 
 /// Example event class.
